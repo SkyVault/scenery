@@ -1,59 +1,68 @@
-import tables, sets, hashes
+import std/macros, sugar, sequtils, strutils
 
 type
-  SceneId* = distinct string
   SceneState = enum
     loading
     updating
     drawing
-    unloading
 
-var
-  scenes = @[SceneId("")]
-  state = loading
+macro genEnum*(T, xs: untyped): untyped =
+  result = newEnum(
+    name = ident($T),
+    fields = sugar.collect(for x in xs: $x).mapIt(ident(it)),
+    public = true,
+    pure = false
+  )
 
-proc `==`*(a, b: SceneId): auto = a.string == b.string
-proc hash*(s: SceneId): auto = hash(s.string)
-proc `$`*(s: SceneId): auto = s.string
+template defScenes*(T, xs: untyped): untyped =
+  genEnum(T, xs)
 
-var
-  sceneIds {.compileTime.} = initHashSet[SceneId]()
+  var
+    scenes: seq[T] = @[]
+    state = loading
+    unload = default(T)
 
-proc isSceneActive*(sceneId: SceneId): bool =
-  scenes[^1] == sceneId
+  proc isActive*(s: T): bool =
+    if len(scenes) == 0: return false
+    result = scenes[^1] == s
 
-proc switchScene*(scene: SceneId) =
-  scenes[^1] = scene
-  state = loading
+  proc pushScene*(s: T) =
+    scenes.add(s)
+    state = loading
 
-proc pushScene*(scene: SceneId) =
-  scenes.add(scene)
-  state = loading
+  proc popScene*(s: T): auto {.discardable.} =
+    result = scenes.pop()
+    unload = result
 
-proc popScene*(): auto {.discardable.} =
-  if scenes.len() == 1:
-    scenes[0] = SceneId("")
-    scenes[0]
-  else:
-    scenes.pop()
+  proc switchScene*(s: T): auto {.discardable.} =
+    result = popScene(s)
+    pushScene(s)
 
-template sceneLoad*(body: untyped) =
-  let scene = scenes[^1]
+  proc activeScene*(): T =
+    if len(scenes) == 0:
+      default(T)
+    else:
+      scenes[^1]
 
-  if scene != SceneId("") and state == loading:
-    body(scene)
-    state = updating
+  proc reset*() =
+    state = loading
 
-template sceneUpdate*(body: untyped) =
-  let scene = scenes[^1]
+  template loadingScene(body: untyped): untyped =
+    if state == loading:
+      body(activeScene())
+      state = updating
 
-  if scene != SceneId("") and state == updating:
-    body(scene)
-    state = drawing
+  template updatingScene(body: untyped): untyped =
+    if state == updating:
+      body(activeScene())
+      state = drawing
 
-template sceneDraw*(body: untyped) =
-  let scene = scenes[^1]
+  template drawingScene(body: untyped): untyped =
+    if state == drawing:
+      body(activeScene())
+      state = updating
 
-  if scene != SceneId("") and state == drawing:
-    body(scene)
-    state = updating
+  template unloadingScene(body: untyped): untyped =
+    if state == unload:
+      body(unload)
+      unload = default(T)

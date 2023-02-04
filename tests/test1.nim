@@ -1,39 +1,28 @@
 import unittest
-import scenery
+import scenery, macros
+
+defScenes(S) do:
+  menu
+  game
+  settings
 
 test "can load scenes":
-  var wasCalled = false
-  switchScene SceneId("menu")
-  sceneLoad do(id: SceneId):
-    check isSceneActive(id)
-    wasCalled = true
-  check wasCalled
+  reset()
+  var called = false
+  loadingScene do(id: S): called = true
+  check called
 
 test "can update scenes":
-  var wasCalled = false
-  switchScene SceneId("menu")
-
-  sceneLoad do(id: SceneId):
-    discard
-
-  sceneUpdate do(id: SceneId):
-    check isSceneActive(id)
-    wasCalled = true
-
-  check wasCalled
+  reset()
+  var called = false
+  loadingScene do(id: S): discard
+  updatingScene do(id: S): called = true
+  check called
 
 test "can draw scenes":
-  var wasCalled = false
-  switchScene SceneId("menu")
-
-  sceneLoad do(id: SceneId):
-    discard
-
-  sceneUpdate do(id: SceneId):
-    discard
-
-  sceneDraw do(id: SceneId):
-    check isSceneActive(id)
-    wasCalled = true
-
-  check wasCalled
+  reset()
+  var called = false
+  loadingScene do(id: S): discard
+  updatingScene do(id: S): discard
+  drawingScene do(id: S): called = true
+  check called
