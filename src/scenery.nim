@@ -49,20 +49,24 @@ template defScenes*(T, xs: untyped): untyped =
 
   template loadingScene(body: untyped): untyped =
     if state == loading:
-      body(activeScene())
+      let it = activeScene()
+      body
       state = updating
 
   template updatingScene(body: untyped): untyped =
     if state == updating:
-      body(activeScene())
+      let it = activeScene()
+      body
       state = drawing
 
   template drawingScene(body: untyped): untyped =
     if state == drawing:
-      body(activeScene())
+      let it = activeScene()
+      body
       state = updating
 
   template unloadingScene(body: untyped): untyped =
     if state == unload:
-      body(unload)
+      let it = unload
+      body
       unload = default(T)
