@@ -18,7 +18,7 @@ template defScenes*(T, xs: untyped): untyped =
   genEnum(T, xs)
 
   var
-    scenes: seq[T] = @[]
+    scenes: seq[T] = @[low(T)]
     state = loading
     unload = default(T)
 
