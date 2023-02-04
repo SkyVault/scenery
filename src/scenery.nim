@@ -49,24 +49,24 @@ template defScenes*(T, xs: untyped): untyped =
 
   template loadingScene(body: untyped): untyped =
     if state == loading:
-      let it = activeScene()
+      let sceneId {.inject.} = activeScene()
       body
       state = updating
 
   template updatingScene(body: untyped): untyped =
     if state == updating:
-      let it = activeScene()
+      let sceneId {.inject.} = activeScene()
       body
       state = drawing
 
   template drawingScene(body: untyped): untyped =
     if state == drawing:
-      let it = activeScene()
+      let sceneId {.inject.} = activeScene()
       body
       state = updating
 
   template unloadingScene(body: untyped): untyped =
     if state == unload:
-      let it = unload
+      let sceneId {.inject.} = unload
       body
       unload = default(T)

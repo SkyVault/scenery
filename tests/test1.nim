@@ -9,7 +9,9 @@ defScenes(S) do:
 test "can load scenes":
   reset()
   var called = false
-  loadingScene: called = true
+  loadingScene:
+    check sceneId == menu
+    called = true
   check called
 
 test "can update scenes":
