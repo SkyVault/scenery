@@ -37,6 +37,7 @@ template defScenes*(T, xs: untyped): untyped =
   proc switchScene*(s: T): auto {.discardable.} =
     result = popScene(s)
     pushScene(s)
+    state = loading
 
   proc activeScene*(): T =
     if len(scenes) == 0:
